@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% block content %}
+<article>
+    <hgroup>
+        <h1>Career Recommender</h1>
+        <h2>First, which stage are you currently in?</h2>
+    </hgroup>
+    <div class="grid">
+        <a href="{{ url_for('career_recommender', stage='school') }}" role="button">🏫 School (Up to 10th)</a>
+        <a href="{{ url_for('career_recommender', stage='intermediate') }}" role="button">🎓 11th & 12th</a>
+        <a href="{{ url_for('career_recommender', stage='btech') }}" role="button">💻 B.Tech Student</a>
+    </div>
+</article>
+{% endblock %}

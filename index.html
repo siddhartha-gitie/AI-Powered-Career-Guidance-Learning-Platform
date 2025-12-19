@@ -1,0 +1,522 @@
+{% extends 'base.html' %}
+{% block content %}
+
+{% if not current_user.is_authenticated %}
+    {% if page == 'login' %}
+    <article style="max-width: 400px; margin: 4rem auto;">
+        <hgroup><h1>Login</h1><h2>Please enter your credentials</h2></hgroup>
+        <form method="post" action="{{ url_for('login') }}">
+            <input type="text" name="username" placeholder="Username" required>
+            <input type="password" name="password" placeholder="Password" required>
+            <button type="submit">Login</button>
+        </form>
+        <footer>Don't have an account? <a href="/register">Register here</a></footer>
+    </article>
+    {% elif page == 'register' %}
+    <article style="max-width: 400px; margin: 4rem auto;">
+        <hgroup><h1>Register</h1><h2>Create a new account</h2></hgroup>
+        <form method="post" action="{{ url_for('register') }}">
+            <input type="text" name="username" placeholder="Username" required>
+            <input type="password" name="password" placeholder="Password" required>
+            <button type="submit">Register</button>
+        </form>
+        <footer>Already have an account? <a href="/login">Login here</a></footer>
+    </article>
+    {% endif %}
+{% else %}
+    {% if page == 'dashboard' %}
+    <article>
+        <hgroup><h1>Welcome to Your Dashboard</h1><h2>Select a service from the sidebar to begin your personalized journey.</h2></hgroup>
+        <p>This platform uses AI to help you discover the right career path, find the skills you need, and create a personalized learning plan to achieve your goals.</p>
+    </article>
+    {% endif %}
+    
+    {% if page == 'career_stage_select' %}
+    <article>
+        <hgroup><h1>Career Recommender</h1><h2>First, which stage are you currently in?</h2></hgroup>
+        <div class="grid">
+            <a href="{{ url_for('career_recommender', stage='school') }}" role="button">🏫 School (Up to 10th)</a>
+            <a href="{{ url_for('career_recommender', stage='intermediate') }}" role="button">🎓 11th & 12th</a>
+            <a href="{{ url_for('career_recommender', stage='btech') }}" role="button">💻 B.Tech Student</a>
+        </div>
+    </article>
+    {% endif %}
+    
+    {% if page == 'career_questionnaire' %}
+    <article>
+        <header><a href="{{ url_for('career_recommender') }}" class="secondary">← Change Stage</a></header>
+        <hgroup><h1>Career Questionnaire</h1><h2>Rate yourself on a scale of 1 to 10.</h2></hgroup>
+        <form method="post" action="{{ url_for('career_recommender') }}">
+            <input type="hidden" name="stage" value="{{ stage }}">
+            {% for q in questions %}
+            <div class="slider-container">
+                <div class="slider-label-group">
+                    <label for="{{ q.name }}">{{ q.text }}</label>
+                    <span class="permanent-value">5</span>
+                </div>
+                <div class="slider-wrapper">
+                    <input type="range" id="{{ q.name }}" name="{{ q.name }}" min="1" max="10" value="5">
+                </div>
+            </div>
+            {% endfor %}
+            <button type="submit">Get My Recommendation</button>
+        </form>
+    </article>
+    {% endif %}
+    
+    {% if page == 'course_questionnaire' %}
+    <article>
+        <hgroup><h1>Course Recommender</h1><h2>Rate your interest in these B.Tech domains.</h2></hgroup>
+        <form method="post" action="{{ url_for('course_recommender') }}">
+            <input type="hidden" name="stage" value="{{ stage }}"> {# Ensure stage is passed if needed #}
+            {% for q in questions %}
+            <div class="slider-container">
+                <div class="slider-label-group">
+                    <label for="{{ q.name }}">{{ q.text }}</label>
+                    <span class="permanent-value">5</span>
+                </div>
+                <div class="slider-wrapper">
+                    <input type="range" id="{{ q.name }}" name="{{ q.name }}" min="1" max="10" value="5">
+                </div>
+            </div>
+            {% endfor %}
+            <button type="submit">Find Courses For Me</button>
+        </form>
+    </article>
+    {% endif %}
+    
+    {% if page == 'course_results' %}
+    <article>
+        <hgroup>
+            <h1>{% if title %}{{ title }}{% else %}Initial Recommendations{% endif %}</h1>
+            <h2>{% if not title %}Based on your interests, here are some starting points.{% else %}<a href="{{ url_for('course_recommender') }}" class="secondary">← Back to interests</a>{% endif %}</h2>
+        </hgroup>
+        {% if results %}
+            <p>You can add these courses to your profile or click "Find Similar" to discover more with our AI model.</p>
+            <form method="post" action="{{ url_for('add_course_to_profile') }}">
+                <table class="saved-items-table"> {# Added class for consistent styling #}
+                    <tbody>
+                    {% for course in results %}
+                    <tr>
+                        <td>
+                            <label style="margin-bottom: 0;">
+                                <input type="checkbox" name="selected_courses" value="{{ course }}">
+                                {{ course }}
+                            </label>
+                        </td>
+                        <td style="text-align: right;">
+                            <a href="{{ url_for('find_similar_courses', course_name=course) }}" role="button" class="secondary outline small">Find Similar</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+                <hr>
+                <button type="submit">Add Selected to My Profile</button>
+            </form>
+        {% else %}
+            <p>No specific courses matched your interests. <a href="{{ url_for('course_recommender') }}" role="button" class="secondary">Try Again</a></p>
+        {% endif %}
+    </article>
+    {% endif %}
+    
+    {% if page == 'quiz_selection' %}
+    <article>
+        <hgroup>
+            <h1>My Quizzes & Roadmaps</h1>
+            <h2>Select a quiz to test your knowledge.</h2>
+        </hgroup>
+        
+        {% if total_quiz_courses > 0 %}
+        <p><em>Available: {{ total_quiz_courses }} courses with quizzes</em></p>
+        {% endif %}
+        
+        <details open>
+            <summary><h4>My Saved Courses (with Quizzes Available)</h4></summary>
+            {% if user_courses %}
+                <table class="saved-items-table"> {# Added class for consistent styling #}
+                    <thead><tr><th>Course Name</th><th style="text-align: right;">Action</th></tr></thead>
+                    <tbody>
+                    {% for course_obj in user_courses %}
+                    <tr>
+                        <td><a href="{{ url_for('quiz_analysis', course_name=course_obj.course_name) }}">{{ course_obj.course_name }}</a></td>
+                        <td style="text-align: right;">
+                            {# Pass user_id and course_name for deletion #}
+                            <form action="{{ url_for('delete_saved_course', user_id=course_obj.user_id, course_name=course_obj.course_name) }}" method="post" style="margin:0; display: inline;">
+                                <button type="submit" class="secondary outline small" onclick="return confirm('Are you sure you want to delete this course?')">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+                <hr style="margin-top: 0;">
+                <form action="{{ url_for('clear_my_courses') }}" method="post" onsubmit="return confirm('Are you sure you want to delete ALL saved courses?');">
+                    <button type="submit" class="contrast outline">Clear All Saved Courses</button>
+                </form>
+            {% else %}
+                <p>You haven't added any courses with available quizzes yet. Go to the <a href="/course_recommender">Course Recommender</a> to find some!</p>
+            {% endif %}
+        </details>
+        
+        <details open>
+            <summary><h4>Practice Quizzes ({{ practice_quizzes|length }})</h4></summary>
+            <p>Take these quizzes for general practice on key topics.</p>
+            {% if practice_quizzes %}
+            <nav>
+                <ul class="practice-quizzes-list">
+                    {% for course_name in practice_quizzes %}
+                    <li>
+                        <a href="{{ url_for('quiz_analysis', course_name=course_name) }}" class="secondary coursename">
+                            {{ course_name }}
+                        </a>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </nav>
+            {% else %}
+            <p>No practice quizzes are currently available.</p>
+            {% endif %}
+        </details>
+    </article>
+    {% endif %}
+
+    {% if page == 'quiz_form' %}
+    <article>
+        <header>
+            <h3>Quiz for: {{ course_name }}</h3>
+            {% if is_practice_quiz %}
+            <p style="color: #666; font-style: italic;">(Practice Quiz)</p>
+            {% endif %}
+            <a href="{{ url_for('quiz_analysis') }}" class="secondary">← Back to Quiz Selection</a>
+        </header>
+        
+        <form method="post" action="{{ url_for('quiz_analysis', course_name=course_name) }}" id="quizForm">
+            <input type="hidden" name="start_time" value="{{ start_time or '0' }}" id="startTime">
+            
+            <label for="difficulty">Select Difficulty Level</label>
+            <select id="difficulty" name="difficulty" required>
+                <option value="" disabled selected>Choose a level...</option>
+                {% for level in available_levels %}
+                <option value="{{ level }}">{{ level }}</option>
+                {% endfor %}
+            </select>
+            
+            <hr>
+            {# NEW: Warning message for non-priority/practice quizzes #}
+            {% if not is_priority_course %}
+            <div style="margin-top: 1rem; padding: 1rem; background: var(--warning-background-color); border: 1px solid var(--warning-border-color); border-radius: 4px;">
+                <p><strong>Warning:</strong> Roadmap features for "{{ course_name }}" are still under development. Quizzes for this course may contain repeated questions, and personalized roadmaps might not be available yet. This will be improved in future enhancements.</p>
+            </div>
+            {% endif %}
+
+            {# New conditional message if no questions available AT ALL for this course #}
+            {% if not has_any_questions %}
+            <div style="margin-top: 1rem; padding: 1rem; background: var(--warning-background-color); border: 1px solid var(--warning-border-color); border-radius: 4px;">
+                <p><strong>No valid quiz questions found for "{{ course_name }}" across any difficulty level.</strong> Please try another course, or ensure your JSON data contains correctly formatted questions for this course.</p>
+            </div>
+            {% else %}
+                {# Only show questions container and submit button if there's a chance to display questions #}
+                <div id="questions-container" style="display:none; margin-top: 1rem;"></div>
+                {# This no-questions-message is for a specific level, not the whole course #}
+                <div id="no-questions-message" style="display:none; margin-top: 1rem; padding: 1rem; background: var(--warning-background-color); border: 1px solid var(--warning-border-color); border-radius: 4px;">
+                    <p><strong>No questions available</strong> for this level yet. Please try a different difficulty level.</p>
+                </div>
+                <button type="submit" id="submit-btn" style="display: none; margin-top: 1rem;" disabled>Submit Quiz</button>
+            {% endif %}
+        </form>
+        
+        <div style="margin-top: 2rem; padding: 1rem; background: var(--success-background-color); border: 1px solid var(--success-border-color); border-radius: 4px;">
+            <h4>Instructions:</h4>
+            <ul>
+                <li>Select all answers before submitting</li>
+                <li>You have unlimited time to complete the quiz</li>
+                <li>Your score and learning profile will be saved automatically</li>
+                <li>Results will help generate your personalized learning roadmap</li>
+            </ul>
+        </div>
+    </article>
+    {% endif %}
+    
+    {% if page == 'quiz_result_and_roadmap' %}
+    <article style="text-align: center;">
+        <h2>🎉 Quiz Results for {{ course_name }}</h2>
+        <p><strong>Level:</strong> {{ difficulty }} | <strong>Time Taken:</strong> {{ "%.1f"|format(time_taken) }} minutes</p>
+        <h1 style="color: {% if score >= 80 %}#28a745{% elif score >= 60 %}#007bff{% elif score >= 40 %}#ffc107{% else %}#dc3545{% endif %};">
+            {{ score }}% 
+            {% if score >= 80 %}🏆 Excellent!{% elif score >= 60 %}👍 Good Job!{% else %}💪 Practice More!{% endif %}
+        </h1>
+        <p>Your learning profile is: <strong style="font-size: 1.2em;">{{ profile }}</strong></p>
+        <p>Our AI recommends: <strong>{{ recommended_next_step }}</strong></p>
+        
+        <hr>
+        <h2>📋 Your Personalized Learning Roadmap</h2>
+        {# Conditionally display roadmap details or a message #}
+        {% if is_roadmap_available_for_course %}
+            {% if roadmap and roadmap|length > 0 %} {# Check if roadmap is not empty #}
+            <div style="overflow-x: auto;">
+                <table class="saved-items-table"> {# Added class for consistent styling #}
+                    <thead>
+                        <tr><th>Topic</th><th>Estimated Time</th><th>Priority</th></tr>
+                    </thead>
+                    <tbody>
+                    {% for topic, time in roadmap %}
+                    {% set priority = 'High' if 'core' in topic.lower() or 'basic' in topic.lower() else 'Medium' %}
+                    <tr>
+                        <td style="text-align: left;">{{ topic }}</td>
+                        <td>{{ time }}</td>
+                        <td>
+                            <span style="padding: 2px 8px; border-radius: 12px; background: {% if priority == 'High' %}#ff6b6b{% else %}#4ecdc4{% endif %}; color: white; font-size: 0.8em; font-weight: bold;">
+                                {{ priority }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <p style="margin-top: 1rem;"><em>Based on your {{ profile }} profile. Adjust your pace as needed!</em></p>
+            <form action="{{ url_for('save_roadmap') }}" method="post" style="margin-top: 1rem;"> {# NEW: Save roadmap button #}
+                <input type="hidden" name="quiz_result_id" value="{{ quiz_result_id }}">
+                <button type="submit" class="primary">Add Roadmap to My Data</button>
+            </form>
+            {% else %} {# No detailed topics even for a priority course #}
+            <div style="padding: 2rem; background: var(--secondary-background-color); border: 1px solid var(--secondary-border-color); border-radius: 4px; margin: 1rem 0;">
+                <p><strong>📝 No detailed roadmap topics defined for this level in your `quiz_topics_core_35courses.json` file.</strong></p>
+                <p>Your quiz performance has been recorded, and the AI has recommended a next step: <strong>{{ recommended_next_step }}</strong>. For now, focus on the topics you struggled with in the quiz!</p>
+            </div>
+            {% endif %}
+        {% else %}
+            <div style="padding: 2rem; background: var(--secondary-background-color); border: 1px solid var(--secondary-border-color); border-radius: 4px; margin: 1rem 0;">
+                <p><strong>📝 Roadmap feature is not yet developed for "{{ course_name }}".</strong></p>
+                <p>Your quiz performance has been recorded, and the AI has recommended a next step: <strong>{{ recommended_next_step }}</strong>.</p>
+                <p>You can still review your score and performance, and roadmaps for this course will be available as future enhancements!</p>
+            </div>
+        {% endif %}
+        
+        <hr>
+        <div style="display: flex; justify-content: space-around; flex-wrap: wrap; gap: 1rem; margin-top: 2rem;">
+            <a href="{{ url_for('quiz_analysis', course_name=course_name) }}" role="button" class="outline">📝 Retake Quiz</a>
+            <a href="{{ url_for('quiz_analysis') }}" role="button" class="secondary">🏠 Back to Quizzes</a>
+            <a href="{{ url_for('my_data') }}" role="button" class="contrast">📊 View All Results</a>
+        </div>
+    </article>
+    {% endif %}
+    
+    {% if page == 'simple_result' %}
+    <article style="text-align: center;">
+        <h2>{{ title }}</h2>
+        {% if results is iterable and results is not string %}
+            <ul style="text-align: left; list-style-type: disc; display: inline-block;">
+                {% for item in results %}
+                <li>{{ item }}</li>
+                {% endfor %}
+            </ul>
+            {% if result_type == 'skill' %}
+            <form action="{{ url_for('save_skills') }}" method="post" style="margin-top: 1rem;">
+                <input type="hidden" name="job_title_to_save" value="{{ job_title_to_save }}">
+                <input type="hidden" name="skills_to_save" value="{{ results | join(',') }}">
+                <button type="submit" class="outline">Save Skills to Profile</button>
+            </form>
+            {% endif %}
+        {% else %}
+            <h1>{{ results }}</h1>
+             {% if result_type == 'career' %}
+            <form action="{{ url_for('save_career') }}" method="post" style="margin-top: 1rem;">
+                <input type="hidden" name="result_to_save" value="{{ results }}">
+                <button type="submit" class="outline">Save Career to Profile</button>
+            </form>
+             {% endif %}
+        {% endif %}
+        <footer><a href="{{ back_url }}" role="button" class="secondary">Try Again</a></footer>
+    </article>
+    {% endif %}
+    
+    {% if page == 'skill_form' %}
+    <article>
+        <hgroup><h1>Skill Recommender</h1><h2>Select a career path to see the required skills.</h2></hgroup>
+        <form method="post" action="{{ url_for('skill_recommender') }}">
+            <label for="job_title">Select a Career Path</label>
+            <select id="job_title" name="job_title" required>
+                <option value="" disabled selected>Choose a career...</option>
+                {% for title in job_titles %}
+                <option value="{{ title }}">{{ title }}</option>
+                {% endfor %}
+            </select>
+            <button type="submit">Find Required Skills</button>
+        </form>
+    </article>
+    {% endif %}
+    
+    {% if page == 'my_data' %}
+    <article>
+        <hgroup><h1>My Saved Data</h1><h2>Your saved career, skill recommendations, and quiz results.</h2></hgroup>
+        
+        <details open>
+            <summary><h4>Saved Careers</h4></summary>
+            {% if saved_careers %}
+            <table class="saved-items-table"> {# Added class for consistent styling #}
+                <thead>
+                    <tr>
+                        <th>Career Domain</th>
+                        <th>Saved On</th>
+                        <th style="text-align: right;">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for career in saved_careers %}
+                <tr>
+                    <td>{{ career.career_domain }}</td>
+                    <td>{{ career.timestamp.strftime('%Y-%m-%d %H:%M') if career.timestamp else 'N/A' }}</td>
+                    <td style="text-align: right;">
+                        <form action="{{ url_for('delete_saved_item', item_type='career', item_id=career.id) }}" method="post" style="margin:0; display:inline;">
+                            <button type="submit" class="secondary outline small" onclick="return confirm('Delete this career?')">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p>You haven't saved any career recommendations yet.</p>
+            {% endif %}
+        </details>
+        
+        <details open>
+            <summary><h4>Saved Skills</h4></summary>
+            {% if saved_skills %}
+            <table class="saved-items-table"> {# Added class for consistent styling #}
+                <thead>
+                    <tr>
+                        <th>Job Title</th>
+                        <th>Skills</th>
+                        <th>Saved On</th>
+                        <th style="text-align: right;">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for skill_set in saved_skills %}
+                <tr>
+                    <td>{{ skill_set.job_title }}</td>
+                    <td>
+                        <ul style="margin:0; padding-left: 1.2em;">
+                        {% for skill in skill_set.skills_list %}
+                            <li>{{ skill }}</li>
+                        {% endfor %}
+                        </ul>
+                    </td>
+                    <td>{{ skill_set.timestamp.strftime('%Y-%m-%d %H:%M') if skill_set.timestamp else 'N/A' }}</td>
+                    <td style="text-align: right;">
+                        <form action="{{ url_for('delete_saved_item', item_type='skill', item_id=skill_set.id) }}" method="post" style="margin:0; display:inline;">
+                            <button type="submit" class="secondary outline small" onclick="return confirm('Delete this skill set?')">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p>You haven't saved any skill sets yet.</p>
+            {% endif %}
+        </details>
+        
+        <details open>
+            <summary><h4>Quiz Results</h4></summary>
+            {% if quiz_results %}
+            <table class="saved-items-table"> {# Added class for consistent styling #}
+                <thead>
+                    <tr>
+                        <th>Course</th>
+                        <th>Level</th>
+                        <th>Score</th>
+                        <th>Profile</th> {# NEW #}
+                        <th>AI Next Step</th> {# NEW #}
+                        <th>Time Taken</th>
+                        <th>Date</th>
+                        <th style="text-align: right;">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for result in quiz_results %}
+                <tr>
+                    <td>{{ result.course_name }}</td>
+                    <td>{{ result.level }}</td>
+                    <td>
+                        <span style="color: {% if result.score*100/result.total_questions >= 80 %}#28a745{% elif result.score*100/result.total_questions >= 60 %}#007bff{% else %}#dc3545{% endif %}; font-weight: bold;">
+                            {{ (result.score*100/result.total_questions)|round(1) }}%
+                        </span>
+                    </td>
+                    <td>{{ result.learning_profile_predicted or 'N/A' }}</td> {# NEW #}
+                    <td>{{ result.recommended_next_step or 'N/A' }}</td> {# NEW #}
+                    <td>{{ "%.1f"|format(result.time_taken) }} min</td>
+                    <td>{{ result.timestamp.strftime('%Y-%m-%d %H:%M') if result.timestamp else 'N/A' }}</td>
+                    <td style="text-align: right;">
+                        <form action="{{ url_for('delete_saved_item', item_type='quiz', item_id=result.id) }}" method="post" style="margin:0; display:inline;">
+                            <button type="submit" class="secondary outline small" onclick="return confirm('Delete this quiz result?')">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p>You haven't completed any quizzes yet. Go to <a href="/quiz_analysis">My Quizzes & Roadmap</a> to start!</p>
+            {% endif %}
+        </details>
+
+        <details open> {# NEW: Section for saved roadmaps #}
+            <summary><h4>Saved Learning Roadmaps</h4></summary>
+            {% if user_roadmaps %}
+                <table class="saved-items-table"> {# Added class for consistent styling #}
+                    <thead>
+                        <tr>
+                            <th>Course</th>
+                            <th>Level</th>
+                            <th>Profile</th>
+                            <th>AI Next Step</th>
+                            <th>Roadmap Topics</th>
+                            <th>Saved On</th>
+                            <th style="text-align: right;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for roadmap_item in user_roadmaps %}
+                        <tr>
+                            <td>{{ roadmap_item.course_name }}</td>
+                            <td>{{ roadmap_item.level }}</td>
+                            <td>{{ roadmap_item.learning_profile_at_generation or 'N/A' }}</td>
+                            <td>{{ roadmap_item.recommended_next_step or 'N/A' }}</td>
+                            <td>
+                                {% if roadmap_item.roadmap_details and roadmap_item.roadmap_details|length > 0 %}
+                                    <ul>
+                                        {% for topic, time in roadmap_item.roadmap_details %}
+                                            <li>{{ topic }} ({{ time }})</li>
+                                        {% endfor %}
+                                    </ul>
+                                {% else %}
+                                    <p>No detailed topics.</p>
+                                {% endif %}
+                            </td>
+                            <td>{{ roadmap_item.timestamp.strftime('%Y-%m-%d %H:%M') if roadmap_item.timestamp else 'N/A' }}</td>
+                            <td style="text-align: right;">
+                                <form action="{{ url_for('delete_saved_item', item_type='roadmap', item_id=roadmap_item.id) }}" method="post" style="margin:0; display:inline;">
+                                    <button type="submit" class="secondary outline small" onclick="return confirm('Delete this saved roadmap?')">Delete</button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p>You haven't saved any learning roadmaps yet. Complete a quiz to generate one and then save it!</p>
+            {% endif %}
+        </details>
+        
+        <hr>
+        <form action="{{ url_for('clear_my_data') }}" method="post" onsubmit="return confirm('Are you sure you want to delete ALL saved careers, skills, quiz results, and roadmaps? This cannot be undone.');">
+            <button type="submit" class="contrast outline">Clear All Saved Data</button>
+        </form>
+    </article>
+    {% endif %}
+{% endif %}
+{% endblock %}

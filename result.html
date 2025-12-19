@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% block content %}
+<article style="text-align: center;">
+    <h2>{{ title }}</h2>
+    {% if results is iterable and results is not string %}
+        <ul style="text-align: left; list-style-type: disc; display: inline-block;">
+            {% for item in results %}
+                <li>{{ item }}</li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <h1>{{ results }}</h1>
+    {% endif %}
+    <footer>
+        <a href="{{ back_url }}" role="button" class="secondary">Try Again</a>
+    </footer>
+</article>
+{% endblock %}

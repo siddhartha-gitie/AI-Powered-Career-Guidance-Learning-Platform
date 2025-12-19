@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Guidance Platform</title>
+
+    <!-- PicoCSS + Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@500;600&display=swap" rel="stylesheet">
+
+<style>
+    :root {
+        --primary: #3b82f6; /* Blue */
+        --accent: #6366f1;  /* Purple */
+        --secondary: #f3f4f6; /* Light gray */
+        --card-bg: #ffffff;
+        --text-main: #111827;
+        --text-muted: #6b7280;
+        --border-light: #e5e7eb;
+        --radius: 12px;
+        --transition: all 0.3s ease;
+        /* Custom semantic colors for warnings/info (matching Pico's naming for consistency) */
+        --pico-background-success: #D4EDDA;
+        --pico-border-color-success: #C3E6CB;
+        --pico-color-success: #155724;
+        --pico-background-info: #D1ECF1;
+        --pico-border-color-info: #BEE5EB;
+        --pico-color-info: #0C5460; /* Darker blue for info messages, matching permanent value */
+        --pico-background-warning: #FFF3CD;
+        --pico-border-color-warning: #FFE58F;
+        --pico-color-warning: #856404;
+        --pico-background-error: #F8D7DA;
+        --pico-border-color-error: #F5C6CB;
+        --pico-color-error: #721C24;
+    }
+
+    [data-theme="dark"] {
+        --primary: #2563eb;
+        --accent: #818cf8;
+        --secondary: #1f2937;
+        --card-bg: #111827;
+        --text-main: #f9fafb;
+        --text-muted: #9ca3af;
+        --border-light: #374151;
+    }
+
+    body {
+        font-family: 'Inter', sans-serif;
+        background-color: var(--secondary);
+        color: var(--text-main);
+        display: flex;
+        margin: 0;
+        min-height: 100vh;
+        overflow-x: hidden;
+    }
+
+    /* Sidebar */
+    .sidebar {
+        background: var(--card-bg);
+        border-right: 1px solid var(--border-light);
+        padding: 2rem 1.5rem;
+        width: 270px;
+        height: 100vh;
+        position: fixed;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        box-shadow: 2px 0 10px rgba(0,0,0,0.03);
+        transition: var(--transition);
+        z-index: 1000;
+    }
+    .sidebar.collapsed {
+        width: 70px;
+        padding: 1rem 0.5rem;
+    }
+    .sidebar.collapsed h3 span,
+    .sidebar.collapsed nav ul li a span,
+    .sidebar.collapsed .user-section p {
+        display: none;
+    }
+    .sidebar h3 {
+        font-family: 'Poppins', sans-serif;
+        font-weight: 600;
+        font-size: 1.3rem;
+        color: var(--accent);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .sidebar nav ul {
+        list-style: none;
+        padding: 0;
+        margin: 2rem 0;
+    }
+    .sidebar a {
+        display: flex;
+        align-items: center;
+        padding: 0.75rem 1rem;
+        margin-bottom: 0.5rem;
+        border-radius: var(--radius);
+        color: var(--text-main);
+        text-decoration: none;
+        transition: var(--transition);
+        font-weight: 500;
+    }
+    .sidebar a:hover,
+    .sidebar a.active {
+        background: linear-gradient(135deg, var(--primary), var(--accent));
+        color: #fff;
+        transform: translateX(3px);
+    }
+    .icon {
+        margin-right: 10px;
+        font-size: 1rem;
+        width: 20px;
+        text-align: center;
+    }
+    /* Toggle Button */
+    .toggle-btn {
+        display: none;
+        position: fixed;
+        top: 1rem;
+        left: 1rem;
+        background: var(--primary);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        padding: 0.6rem 0.8rem;
+        cursor: pointer;
+        z-index: 1001;
+        transition: var(--transition);
+    }
+    .toggle-btn:hover {
+        background: var(--accent);
+    }
+    /* Main Content */
+    .main-content {
+        margin-left: 270px;
+        padding: 3rem 3.5rem;
+        width: calc(100% - 270px);
+        transition: var(--transition);
+        flex-grow: 1;
+    }
+    .collapsed ~ .main-content {
+        margin-left: 70px;
+        width: calc(100% - 70px);
+    }
+    article {
+        background: var(--card-bg);
+        padding: 2rem;
+        border-radius: var(--radius);
+        box-shadow: 0 3px 10px rgba(0,0,0,0.04);
+        margin-bottom: 2rem;
+        transition: var(--transition);
+        animation: fadeIn 0.4s ease-in-out;
+    }
+    article:hover {
+        box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+    }
+    h1, h2, h3, h4 {
+        font-family: 'Poppins', sans-serif;
+        margin-bottom: 0.5rem;
+        color: var(--text-main);
+    }
+    h2, h3 {
+        color: var(--text-muted);
+        font-weight: 500;
+    }
+    p {
+        line-height: 1.7;
+        color: var(--text-muted);
+    }
+    [role="button"], button {
+        border-radius: var(--radius);
+        background-color: var(--primary);
+        border: none;
+        color: #fff;
+        padding: 0.75rem 1.25rem;
+        font-weight: 500;
+        transition: var(--transition);
+        cursor: pointer;
+    }
+    [role="button"]:hover, button:hover {
+        background-color: var(--accent);
+        transform: translateY(-2px);
+    }
+    .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 1.5rem;
+        animation: fadeIn 0.4s ease-in-out;
+        margin-top: 1.5rem;
+    }
+    .grid > a[role="button"] {
+        text-align: center;
+        background: var(--card-bg);
+        color: var(--text-main);
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+        transition: var(--transition);
+        padding: 1.5rem;
+        text-decoration: none;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 100px;
+        font-weight: 600;
+        font-family: 'Poppins', sans-serif;
+    }
+    .grid > a[role="button"]:hover {
+        background: linear-gradient(135deg, var(--primary), var(--accent));
+        color: #fff;
+        box-shadow: 0 5px 15px rgba(59,130,246,0.25);
+        transform: translateY(-5px);
+    }
+    .grid > a[role="button"] .icon {
+        font-size: 2em;
+        margin-bottom: 0.5rem;
+        color: var(--primary);
+    }
+    .grid > a[role="button"]:hover .icon {
+        color: #fff;
+    }
+    input, select, textarea {
+        border-radius: var(--radius);
+        border: 1px solid var(--border-light);
+        padding: 0.75rem;
+        width: 100%;
+        margin-top: 0.5rem;
+        margin-bottom: 1rem;
+        font-size: 1rem;
+        box-sizing: border-box;
+    }
+    input:focus, select:focus, textarea:focus {
+        border-color: var(--accent);
+        outline: none;
+        box-shadow: 0 0 0 2px rgba(99,102,241,0.2);
+    }
+    table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+        border-radius: var(--radius);
+        overflow: hidden;
+        animation: fadeIn 0.4s ease-in-out;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+    }
+    table th, table td {
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid var(--border-light);
+    }
+    table th {
+        background: var(--secondary);
+        color: var(--text-main);
+        text-align: left;
+        font-weight: 600;
+        font-family: 'Poppins', sans-serif;
+    }
+    table tbody tr:last-child td {
+        border-bottom: none;
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    @media (max-width: 900px) {
+        .toggle-btn {
+            display: block;
+        }
+        .sidebar {
+            position: fixed;
+            transform: translateX(-100%);
+            z-index: 1000;
+        }
+        .sidebar.active {
+            transform: translateX(0);
+        }
+        .main-content {
+            margin: 0;
+            width: 100%;
+            padding: 2rem 1.5rem;
+        }
+    }
+    .theme-toggle {
+        cursor: pointer;
+        font-size: 1.2rem;
+        color: var(--text-muted);
+        transition: var(--transition);
+    }
+    .theme-toggle:hover {
+        color: var(--accent);
+    }
+    .user-section {
+        border-top: 1px solid var(--border-light);
+        padding-top: 1rem;
+        text-align: center;
+    }
+    /* ----------- MODIFIED SLIDER STYLES: Begin ----------- */
+    .slider-container {
+        position: relative;
+        margin-bottom: 2.5rem;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        width: 100%;
+    }
+    .slider-label-group {
+        display: flex;
+        align-items: center; /* Vertically align items in the label group */
+        gap: 10px; /* Aligned with 10px spacing as requested */
+        margin-bottom: 0.5rem; /* Space between label group and slider */
+        width: 100%;
+    }
+    .slider-label-group label {
+        margin-bottom: 0;
+        font-weight: 600;
+        color: var(--text-main);
+        flex-grow: 1; /* Allows label to take up available space */
+        font-size: 1.07em; /* Consistent with previous label size */
+    }
+    .slider-label-group .permanent-value {
+        /* Exact Visual Style for '5' */
+        background-color: var(--pico-color-info); /* Dark blue background using Pico's info color */
+        color: #fff; /* Bold white text */
+        border-radius: 4px; /* Sharp corners */
+        padding: 5px 12px; /* Adjusted padding for rectangular shape */
+        font-family: 'Poppins', sans-serif; /* Different typeface */
+        font-size: 1.1em; /* Larger font size */
+        min-width: 38px; /* Ensure it's wide enough */
+        text-align: center;
+        font-weight: 700; /* Bolder font weight */
+        box-shadow: 0 2px 7px rgba(0,0,0,0.15); /* Subtle shadow for depth */
+        transition: all 0.2s ease-in-out;
+        flex-shrink: 0; /* Prevent it from shrinking */
+    }
+
+    .slider-wrapper {
+        position: relative;
+        width: 100%;
+        display: flex;
+        align-items: center;
+        margin-bottom: 0.3rem;
+    }
+    .slider-wrapper input[type="range"] {
+        flex-grow: 1;
+        -webkit-appearance: none;
+        width: 100%;
+        height: 9px;
+        border-radius: 7px;
+        background: var(--border-light);
+        outline: none;
+        cursor: grab;
+        transition: background 0.12s ease-in-out;
+    }
+    .slider-wrapper input[type="range"]::-webkit-slider-thumb,
+    .slider-wrapper input[type="range"]::-moz-range-thumb {
+        width: 22px;
+        height: 22px;
+        background: var(--primary);
+        border-radius: 50%;
+        cursor: grab;
+        box-shadow: 0 0 7px rgba(0,0,0,0.22);
+        border: 2px solid var(--accent);
+        transition: background 0.13s ease-in-out;
+    }
+    .slider-value-popup {
+        position: absolute;
+        top: -38px; /* Position above the slider thumb */
+        background: var(--accent);
+        color: #fff;
+        padding: 6px 15px;
+        border-radius: 8px;
+        font-size: 1.04em;
+        transform: translateX(-50%); /* Center above thumb */
+        white-space: nowrap;
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 0.1s ease-in-out, transform 0.1s ease-in-out; /* Instant appearance/disappearance */
+        box-shadow: 0 2px 10px rgba(0,0,0,0.19);
+        font-weight: 600;
+        z-index: 10; /* Ensure popup is above other elements */
+    }
+    .slider-value-popup::after {
+        content: '';
+        position: absolute;
+        left: 50%;
+        bottom: -8px;
+        transform: translateX(-50%) rotate(45deg);
+        width: 13px;
+        height: 13px;
+        background-color: var(--accent);
+        border-radius: 3px;
+        z-index: -1;
+    }
+    /* ----------- MODIFIED SLIDER STYLES: End ----------- */
+    /* Flash Message Styling (using Pico's built-in variables) */
+    .flash-message {
+        margin-bottom: 1.5rem;
+    }
+    .flash-message p {
+        padding: 0.75rem 1rem;
+        margin-bottom: 0;
+        border-radius: var(--radius);
+        font-weight: normal;
+    }
+    .flash-message.success p {
+        background-color: var(--pico-background-success);
+        border: 1px solid var(--pico-border-color-success);
+        color: var(--pico-color-success);
+    }
+    .flash-message.info p {
+        background-color: var(--pico-background-info);
+        border: 1px solid var(--pico-border-color-info);
+        color: var(--pico-color-info);
+    }
+    .flash-message.warning p {
+        background-color: var(--pico-background-warning);
+        border: 1px solid var(--pico-border-color-warning);
+        color: var(--pico-color-warning);
+    }
+    .flash-message.danger p {
+        background-color: var(--pico-background-error);
+        border: 1px solid var(--pico-border-color-error);
+        color: var(--pico-color-error);
+    }
+
+    /* Styles to address table background issues */
+    table tbody tr {
+        background-color: var(--card-bg) !important; /* Ensures a consistent background */
+    }
+    table tbody tr:hover {
+        background-color: var(--secondary) !important; /* Subtle hover effect */
+    }
+    table tbody td {
+        color: var(--text-main); /* Ensures text is visible against the background */
+    }
+    table tbody a {
+        color: var(--primary); /* Ensures links are clearly visible */
+    }
+    table tbody button {
+        color: #fff; /* Ensures button text is visible */
+    }
+
+    /* --- Practice Quizzes List --- */
+    .practice-quizzes-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); /* Use auto-fill to evenly distribute columns */
+        gap: 1.5rem; /* Space between quiz cards */
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        justify-items: stretch; /* Stretch items to fill column width */
+        align-items: stretch; /* Stretch items to fill row height */
+    }
+    /* No direct styling needed for .practice-quizzes-list li, let the grid handle it */
+
+    .practice-quizzes-list a {
+        display: flex; /* Use flexbox for content inside the card */
+        flex-direction: column; /* Stack text vertically */
+        justify-content: center; /* Center text vertically */
+        align-items: center; /* Center text block horizontally */
+        text-align: center; /* Center text lines within the block */
+
+        padding: 1rem;
+        border: 1px solid var(--border-light); /* Consistent border from theme */
+        border-radius: var(--radius); /* Consistent border-radius from theme */
+        background: var(--card-bg); /* Consistent card background from theme */
+        box-shadow: 0 2px 8px rgba(0,0,0,0.03); /* Subtle shadow */
+        color: var(--text-main); /* Default text color for readability */
+        font-weight: 500;
+        transition: var(--transition); /* Smooth transitions for hover effects */
+        text-decoration: none;
+        min-height: 120px; /* Ensure a consistent minimum height for all cards */
+        line-height: 1.4; /* Improved readability for multi-line text */
+        overflow: hidden; /* Prevent text overflow if titles are too long without wrapping */
+        text-overflow: ellipsis; /* Add ellipsis for overflowing text */
+    }
+    .practice-quizzes-list a:hover {
+        background: var(--secondary); /* Light highlight on hover */
+        color: var(--primary); /* Change text color on hover */
+        box-shadow: 0 5px 15px rgba(59,130,246,0.15); /* More pronounced shadow on hover */
+        transform: translateY(-3px); /* Slight lift effect on hover */
+    }
+</style>
+</head>
+<body>
+    <div class="container-fluid" style="display: flex; width: 100%;">
+        {% if current_user.is_authenticated %}
+        <aside class="sidebar">
+            <nav>
+                <h3><i class="fas fa-brain icon"></i> AI Platform</h3>
+                <ul>
+                    <li><a href="/dashboard" class="contrast {% if request.endpoint == 'dashboard' %}active{% endif %}"><i class="fas fa-home icon"></i> Dashboard</a></li>
+                    <li><a href="/career_recommender" class="contrast {% if request.endpoint == 'career_recommender' %}active{% endif %}"><i class="fas fa-briefcase icon"></i> Career Recommender</a></li>
+                    <li><a href="/course_recommender" class="contrast {% if request.endpoint == 'course_recommender' or request.endpoint == 'add_course_to_profile' or request.endpoint == 'find_similar_courses' %}active{% endif %}"><i class="fas fa-book-open icon"></i> Course Recommender</a></li>
+                    <li><a href="/skill_recommender" class="contrast {% if request.endpoint == 'skill_recommender' %}active{% endif %}"><i class="fas fa-lightbulb icon"></i> Skill Recommender</a></li>
+                    <li><a href="/quiz_analysis" class="contrast {% if request.endpoint == 'quiz_analysis' %}active{% endif %}"><i class="fas fa-tasks icon"></i> My Quizzes & Roadmap</a></li>
+                    <li><a href="/my_data" class="contrast {% if request.endpoint == 'my_data' %}active{% endif %}"><i class="fas fa-user-cog icon"></i> My Data</a></li>
+                </ul>
+            </nav>
+            <div><hr><p>Welcome, {{ current_user.username }}!</p><a href="/logout" role="button" class="secondary outline">Logout</a></div>
+        </aside>
+        {% endif %}
+
+        <main class="main-content">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}{% for category, message in messages %}<article class="flash-message {{ category }}"><p><strong>{{ message }}</strong></p></article>{% endfor %}{% endif %}
+            {% endwith %}
+
+            {% block content %}
+            {% endblock %}
+        </main>
+    </div>
+    {% block scripts %}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const sliders = document.querySelectorAll('.slider-wrapper input[type="range"]');
+
+            sliders.forEach(slider => {
+                const sliderContainer = slider.closest('.slider-container');
+                const permanentValueDisplay = sliderContainer.querySelector('.permanent-value');
+
+                // Create dynamic popup for slider value
+                const popup = document.createElement('span');
+                popup.className = 'slider-value-popup';
+                slider.parentNode.appendChild(popup);
+
+                function updateSliderValues() {
+                    const value = slider.value;
+                    permanentValueDisplay.textContent = value;
+
+                    // Thumb calculation for popup placement
+                    const min = parseFloat(slider.min);
+                    const max = parseFloat(slider.max);
+                    const val = parseFloat(value);
+                    const percentage = (val - min) / (max - min);
+
+                    const sliderWidth = slider.offsetWidth;
+                    // Position the popup directly above the thumb, adjusting for thumb width to center it
+                    const thumbWidth = 22; // From CSS: input[type="range"]::-webkit-slider-thumb width
+                    let leftPosition = (sliderWidth * percentage);
+                    
+                    // Adjust transform to center popup, no need to subtract popup.offsetWidth / 2 from leftPosition
+                    // transform: translateX(-50%) will center it based on its own width
+                    
+                    popup.style.left = `${leftPosition}px`;
+                    popup.textContent = value;
+                }
+
+                // Show popup instantly on input (while sliding)
+                slider.addEventListener('input', () => {
+                    popup.style.opacity = '1';
+                    popup.style.transform = 'translateX(-50%) translateY(-5px)'; // Subtle "pop" effect
+                    updateSliderValues();
+                });
+
+                // Hide popup instantly when sliding stops
+                slider.addEventListener('change', () => {
+                    popup.style.opacity = '0';
+                    popup.style.transform = 'translateX(-50%) translateY(0)'; // Reset position
+                });
+
+                // Show popup on mouseover (instant)
+                slider.addEventListener('mouseover', () => {
+                    popup.style.opacity = '1';
+                    popup.style.transform = 'translateX(-50%) translateY(-5px)';
+                    updateSliderValues();
+                });
+
+                // Hide popup on mouseout (instant)
+                slider.addEventListener('mouseout', () => {
+                    // Only hide if not currently dragging (active input) or focused
+                    if (!slider.matches(':active') && !slider.matches(':focus')) {
+                        popup.style.opacity = '0';
+                        popup.style.transform = 'translateX(-50%) translateY(0)';
+                    }
+                });
+
+                // Show popup on focus (instant)
+                slider.addEventListener('focus', () => {
+                    popup.style.opacity = '1';
+                    popup.style.transform = 'translateX(-50%) translateY(-5px)';
+                    updateSliderValues();
+                });
+
+                // Hide popup on blur (instant)
+                slider.addEventListener('blur', () => {
+                    popup.style.opacity = '0';
+                    popup.style.transform = 'translateX(-50%) translateY(0)';
+                });
+
+                // Initial state
+                updateSliderValues();
+                popup.style.opacity = '0'; // Ensure popup is hidden initially
+            });
+
+            // Quiz functionality - Only run on quiz pages
+            const difficultySelect = document.getElementById('difficulty');
+            const questionsContainer = document.getElementById('questions-container');
+            const noQuestionsMessage = document.getElementById('no-questions-message');
+            const submitBtn = document.getElementById('submit-btn');
+            const quizForm = document.getElementById('quizForm');
+            
+            // Safely get question_bank - only available on quiz_form page
+            let questionBank = {};
+            {% if question_bank is defined %}
+                questionBank = {{ question_bank|tojson|safe }};
+            {% endif %}
+
+            // Log questionBank to console for debugging
+            console.log("Question Bank:", questionBank);
+            
+            if (difficultySelect) {
+                difficultySelect.addEventListener('change', function(e) {
+                    const selectedDifficulty = e.target.value;
+                    console.log("Selected Difficulty:", selectedDifficulty);
+
+                    // Clear previous content and reset displays
+                    questionsContainer.innerHTML = '';
+                    questionsContainer.style.display = 'none'; // Ensure it's hidden if no questions are found
+                    noQuestionsMessage.style.display = 'none';
+                    submitBtn.style.display = 'none';
+                    submitBtn.disabled = true;
+                    
+                    if (selectedDifficulty && questionBank[selectedDifficulty]) {
+                        const questions = questionBank[selectedDifficulty];
+                        console.log("Questions for selected difficulty:", questions);
+                        
+                        if (questions && questions.length > 0) {
+                            questions.forEach(function(question, index) {
+                                const questionNumber = index + 1;
+                                const fieldset = document.createElement('fieldset');
+                                fieldset.style.marginBottom = '1.5rem';
+                                fieldset.style.padding = '1rem';
+                                fieldset.style.border = '1px solid var(--border-light)'; /* Use theme variable */
+                                fieldset.style.borderRadius = 'var(--radius)';
+                                fieldset.style.backgroundColor = 'var(--card-bg)'; /* Use theme variable */
+                                
+                                let optionsHTML = '';
+                                if (question.options && question.options.length > 0) {
+                                    question.options.forEach(function(option) {
+                                        const safeOption = option.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+                                        optionsHTML += `
+                                            <label style="display: block; margin-bottom: 0.5rem; cursor: pointer;">
+                                                <input type="radio" name="q${questionNumber}" value="${safeOption}" required style="margin-right: 0.5rem;">
+                                                ${option}
+                                            </label>
+                                        `;
+                                    });
+                                } else {
+                                    optionsHTML = '<p style="color: var(--pico-color-error); font-weight: bold;">Error: No options available for this question.</p>'; /* Use theme variable */
+                                }
+                                
+                                fieldset.innerHTML = `
+                                    <legend style="font-weight: bold; margin-bottom: 0.5rem; padding: 0 0.5rem; font-size: 1.1em;">
+                                        Question ${questionNumber}: ${question.question}
+                                    </legend>
+                                    ${optionsHTML}
+                                `;
+                                
+                                questionsContainer.appendChild(fieldset);
+                            });
+                            
+                            questionsContainer.style.display = 'block';
+                            submitBtn.style.display = 'block';
+                            submitBtn.disabled = false;
+                            
+                            // Enable submit button only when all questions are answered
+                            const radioButtons = questionsContainer.querySelectorAll('input[type="radio"]');
+                            const totalQuestions = questions.length;
+                            
+                            function checkAllAnswered() {
+                                let answeredCount = 0;
+                                for (let i = 1; i <= totalQuestions; i++) {
+                                    const radios = document.querySelectorAll(`input[name="q${i}"]:checked`);
+                                    if (radios.length > 0) answeredCount++;
+                                }
+                                submitBtn.disabled = answeredCount < totalQuestions;
+                                submitBtn.textContent = `Submit Quiz (${answeredCount}/${totalQuestions} answered)`;
+                            }
+                            
+                            radioButtons.forEach(radio => {
+                                radio.addEventListener('change', checkAllAnswered);
+                            });
+                            
+                            checkAllAnswered();
+                            
+                        } else {
+                            noQuestionsMessage.style.display = 'block';
+                            noQuestionsMessage.innerHTML = '<p><strong>No questions available</strong> for this level yet. Please try a different difficulty level.</p>';
+                        }
+                    } else if (selectedDifficulty) {
+                        noQuestionsMessage.style.display = 'block';
+                        noQuestionsMessage.innerHTML = '<p><strong>No questions available</strong> for the selected level. Please check if questions exist for this difficulty.</p>';
+                    }
+                });
+            }
+
+            // Form validation before submission - only on quiz pages
+            if (quizForm) {
+                quizForm.addEventListener('submit', function(e) {
+                    const selectedDifficulty = difficultySelect.value;
+                    const answeredQuestions = document.querySelectorAll('input[type="radio"]:checked').length;
+                    
+                    if (!selectedDifficulty) {
+                        e.preventDefault();
+                        alert('Please select a difficulty level first.');
+                        return false;
+                    }
+                    
+                    const questionsForLevel = questionBank[selectedDifficulty] || [];
+                    const totalQuestions = questionsForLevel.length;
+                    
+                    if (totalQuestions === 0) {
+                        e.preventDefault();
+                        alert('No questions available for the selected level. Please choose a different difficulty.');
+                        return false;
+                    }
+                    
+                    if (answeredQuestions < totalQuestions) {
+                        e.preventDefault();
+                        alert(`Please answer all ${totalQuestions} questions before submitting. You have answered ${answeredQuestions}.`);
+                        return false;
+                    }
+                    
+                    // Confirm submission
+                    if (!confirm(`Are you sure you want to submit? You will receive your score and learning profile.`)) {
+                        e.preventDefault();
+                        return false;
+                    }
+                });
+            }
+        });
+    </script>
+    {% endblock %}
+</body>
+</html>
