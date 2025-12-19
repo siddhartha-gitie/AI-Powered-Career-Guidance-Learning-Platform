@@ -1,9 +1,10 @@
-🎯 AI-Powered Career Guidance & Personalized Learning Platform
+# AI-Powered Career Guidance & Personalized Learning Platform
 
 This system helps users discover suitable career paths, get relevant course recommendations, and follow personalized learning roadmaps based on their interests, skills, and quiz responses.
 It uses machine learning models like Random Forest, TF-IDF with Cosine Similarity, KNN, Decision Tree, and Random Forest pipelines to provide accurate and meaningful guidance.
 
-🚀 Features
+
+# Features
 
 Predict suitable career paths
 
@@ -15,7 +16,7 @@ Uses real-world Kaggle datasets + synthetic datasets
 
 Structured ML workflow and evaluation
 
-🧰 Tech Stack
+# Tech Stack
 
 Python
 
@@ -27,7 +28,8 @@ TF-IDF + Cosine Similarity
 
 Kaggle Datasets & Custom Data
 
-📂 Project Structure
+
+# Project Structure
 ├── career_prediction.ipynb        # Career classification model
 ├── course_recommendation.ipynb    # Course recommender (TF-IDF + KNN)
 ├── quiz_learning_path.ipynb       # Quiz-based learning roadmap
@@ -36,23 +38,23 @@ Kaggle Datasets & Custom Data
 ├── requirements.txt               # Dependencies
 └── README.md                      # Project documentation
 
-⚙️ How to Run Locally
-1️⃣ Clone the Repository
+# How to Run Locally
+1 Clone the Repository
 git clone https://github.com/your-username/AI-Career-Guidance.git
 cd AI-Career-Guidance
 
-2️⃣ Create a Virtual Environment (Optional but Recommended)
+2️ Create a Virtual Environment (Optional but Recommended)
 python -m venv venv
 source venv/bin/activate      # Windows: venv\Scripts\activate
 
-3️⃣ Install Dependencies
+3️ Install Dependencies
 pip install -r requirements.txt
 
-4️⃣ Run the Project
+4️ Run the Project
 
 Open the notebooks in Jupyter Notebook / VS Code and execute the cells.
 
-🧠 Model Overview
+# Model Overview
 
 Random Forest → Career Prediction
 
@@ -62,7 +64,7 @@ KNN → Interest-based Recommendation
 
 Decision Tree & Random Forest → Quiz Evaluation + Learning Path Generation
 
-🔮 Future Improvements
+# Future Improvements
 
 Add roadmap support for more domains
 
