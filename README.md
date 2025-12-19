@@ -1,126 +1,73 @@
-AI-Powered Career Guidance and Personalized Learning Platform
-Overview
+AI-Powered Career Guidance & Personalized Learning Platform
 
-This project presents the design and development of an AI-driven platform intended to assist users in career selection, course identification, and structured learning progression. The system utilizes machine learning-based classification models and recommender system techniques to generate personalized outcomes grounded in user data and quiz-based assessments.
+This system helps users discover suitable career paths, get relevant course recommendations, and follow personalized learning roadmaps based on their interests, skills, and quiz responses.
+It uses machine learning models like Random Forest, TF-IDF with Cosine Similarity, and KNN to provide accurate and meaningful guidance.
 
-Objectives
+Features
 
-To classify suitable career paths based on user inputs.
+Predict suitable career paths
 
-To recommend relevant learning resources and courses using data-driven techniques.
+Recommend relevant courses
 
-To generate adaptive learning roadmaps through quiz-based evaluations.
+Generate personalized learning paths
 
-To evaluate model performance using standard machine learning metrics.
+Uses real-world Kaggle datasets + synthetic datasets
 
-Methodology
-1️⃣ Career Classification
+Structured ML workflow and evaluation
 
-A Random Forest Classifier was implemented to predict suitable career roles using labeled datasets.
-
-2️⃣ Course Recommendation
-
-Two recommendation strategies were used:
-
-Content-Based Filtering
-Using TF-IDF + Cosine Similarity for matching course descriptions.
-
-Interest-Based Filtering (Collaborative Filtering)
-Implemented using K-Nearest Neighbors (KNN).
-
-3️⃣ Learning Path Generation
-
-User quiz responses were processed using:
-
-Decision Tree
-
-Random Forest Pipelines
-
-These models produced structured personalized learning plans.
-
-Dataset
-
-Real-world datasets sourced from Kaggle for course and skill recommendations.
-
-Custom synthetic datasets created for career prediction and quiz evaluation.
-
-All datasets were preprocessed and converted into machine-learning compatible formats.
-
-Evaluation Metrics
-
-Models were trained and validated using:
-
-Accuracy
-
-Precision
-
-Recall
-
-The Random Forest model demonstrated strong performance in career predictions, while quiz evaluation models performed reliably on structured synthetic data.
-
-Challenges Addressed
-
-Intra-class variability in career skill sets
-
-Similarity between related job roles
-
-Noise in user responses and course descriptions
-
-Dataset imbalance across career categories
-
-Tools and Technologies
+Tech Stack
 
 Python
 
-Scikit-learn
+Scikit-learn, Pandas, NumPy
 
-Pandas
+Random Forest, Decision Tree, KNN
 
-NumPy
+TF-IDF + Cosine Similarity
 
-Future Scope
+Kaggle Datasets & Custom Data
 
-Expanding roadmap recommendations across all learning domains
+Project Structure
+├── career_prediction.ipynb        # Career classification model
+├── course_recommendation.ipynb    # Course recommender (TF-IDF + KNN)
+├── quiz_learning_path.ipynb       # Quiz-based learning roadmap
+├── datasets/                      # Real + synthetic datasets
+├── models/                        # Trained ML models
+├── requirements.txt               # Dependencies
+└── README.md                      # Project documentation
 
-Improving generalization with more diverse datasets
+How to Run Locally
+1️⃣ Clone the Repository
+git clone https://github.com/your-username/AI-Career-Guidance.git
+cd AI-Career-Guidance
 
-Deploying the platform as a scalable web application
+2️⃣ Create a Virtual Environment (Optional but Recommended)
+python -m venv venv
+source venv/bin/activate   # Windows: venv\Scripts\activate
 
-Project Status
+3️⃣ Install Dependencies
+pip install -r requirements.txt
 
-Completed as a functional academic prototype with potential for further enhancement and deployment.
+4️⃣ Run the Notebooks / Scripts
 
-🚀 Startup-Style Short README
-AI Career & Learning Recommendation Platform
+Open the notebooks in Jupyter Notebook / VS Code and execute.
 
-An AI platform that helps users discover careers, find the right courses, and follow personalized learning paths — all powered by machine learning.
+Model Overview
 
-⭐ Key Features
+Random Forest → Career Prediction
 
-Career prediction using Random Forest
+TF-IDF + Cosine Similarity → Content-Based Course Recommendation
 
-Course recommendations using TF-IDF + Cosine Similarity and KNN
+KNN → Interest-Based Recommendation
 
-Quiz-based personalized learning roadmaps
+Decision Tree & Random Forest → Quiz Evaluation and Learning Roadmap
 
-Performance evaluation using accuracy, precision, and recall
+Future Improvements
 
-⚙️ Tech Stack
+Add learning roadmap coverage for more domains
 
-Python • Scikit-learn • Pandas • NumPy • Kaggle Datasets
+Improve generalization with larger datasets
 
-🧠 How It Works
+Deploy as a full web application
 
-1️⃣ User inputs interests/skills
-2️⃣ System predicts best-fit career
-3️⃣ Courses are recommended
-4️⃣ User completes quiz
-5️⃣ Personalized learning roadmap is generated
-
-🔮 Future Enhancements
-
-Wider roadmap coverage
-
-Improved model accuracy
-
-Full web deployment
+Real-time adaptive recommendations
